@@ -20,6 +20,7 @@ import {
   HStack,
   Grid,
   GridItem,
+  useToast,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import {
@@ -40,6 +41,7 @@ const ELEVENLABS_API_KEY = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
 
 const AddVoicePage = () => {
   const router = useRouter();
+  const toast = useToast();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -60,6 +62,13 @@ const AddVoicePage = () => {
   const openModal = () => {
     if (voices.length >= 2) {
       console.log("You can upload only two voices.");
+      toast({
+        title: "Error",
+        description: "As Alpha user, You can only clone / upload two voices!",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
       return;
     }
     setIsModalOpen(true);
@@ -153,9 +162,24 @@ const AddVoicePage = () => {
           .then((response) => response.json())
           .then((data) => console.log("New user added:", data))
           .catch((error) => console.error("Error adding user:", error));
+
+        toast({
+          title: "Success",
+          description: "You have cloned / uploaded up successfully!",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
         router.reload();
         closeModal();
       } catch (error) {
+        toast({
+          title: "Error",
+          description: "Error fetching users!",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
         console.error("Error fetching users:", error);
       } finally {
         setCloning(false);
@@ -163,12 +187,26 @@ const AddVoicePage = () => {
       }
     }
   };
-  const handleRemoveVoice = async () => {
+  const handleRemoveVoice = async (voiceID, id) => {
+    console.log(voiceID);
+
     try {
+      const options = {
+        method: "DELETE",
+        headers: { "xi-api-key": ELEVENLABS_API_KEY },
+      };
+
+      fetch(`https://api.elevenlabs.io/v1/voices/${voiceID}`, options)
+        .then((response) => response.json())
+        .then((response) => console.log(response))
+        .catch((err) => console.error(err));
+
       const voiceData = {
         action: "removeVoice",
         email: email,
         voices: {
+          _id: id,
+          voice_id: voiceID,
           voiceName: name,
           voiceDescription: description,
         },
@@ -182,7 +220,15 @@ const AddVoicePage = () => {
       })
         .then((response) => response.json())
         .then((data) => {
-          console.log("New user added:", data);
+          console.log("voice removed:", data);
+
+          toast({
+            title: "Success",
+            description: "You delete successfully!",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
           router.reload();
         })
         .catch((error) => console.error("Error adding user:", error));
@@ -243,20 +289,20 @@ const AddVoicePage = () => {
     setFiles([]);
   };
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const response = await fetch("/api/users");
-        const data = await response.json();
-        const email = localStorage.getItem("email");
-        const user = data.find((user) => user.email === email);
-        console.log(user.voices);
-        setEmail(email);
-        setVoices(user.voices);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
+  async function fetchUsers() {
+    try {
+      const response = await fetch("/api/users");
+      const data = await response.json();
+      const email = localStorage.getItem("email");
+      const user = data.find((user) => user.email === email);
+      console.log(user.voices);
+      setEmail(email);
+      setVoices(user.voices);
+    } catch (error) {
+      console.error("Error fetching users:", error);
     }
+  }
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -304,6 +350,9 @@ const AddVoicePage = () => {
             <Text mt={2} fontSize="md">
               Add Generative or Cloned Voice
             </Text>
+            <Text mt={2} fontSize="md">
+              {voices?.length} / 2
+            </Text>
           </MotionBox>
         )}
 
@@ -343,7 +392,7 @@ const AddVoicePage = () => {
                   <Button
                     size="sm"
                     leftIcon={<FaTrash />}
-                    onClick={handleRemoveVoice}
+                    onClick={() => handleRemoveVoice(voice.voice_id, voice._id)}
                   >
                     Remove
                   </Button>

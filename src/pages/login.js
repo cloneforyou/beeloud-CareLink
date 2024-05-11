@@ -1,4 +1,3 @@
-// pages/auth.js
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -9,6 +8,7 @@ import {
   Input,
   VStack,
   useColorModeValue,
+  useToast,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
@@ -21,11 +21,12 @@ const AuthPage = () => {
     "linear(to-r, gray.800, gray.700, gray.600)"
   );
   const router = useRouter();
+  const toast = useToast();
   const [isLogin, setIsLogin] = useState(true);
   const [users, setUsers] = useState([]);
-  const [name, setName] = useState();
-  const [email, setEmail] = useState();
-  const [password, setPassword] = useState();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const maxCharacters = 2000;
 
   const handleToggle = () => {
@@ -59,19 +60,49 @@ const AuthPage = () => {
           console.log("New user added:", data);
           localStorage.setItem("email", email);
 
+          toast({
+            title: "Success",
+            description: "You have signed up successfully!",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+
           router.push("/add-voice");
         })
-        .catch((error) => console.error("Error adding user:", error));
+        .catch((error) => {
+          console.error("Error adding user:", error);
+        });
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   };
 
   const handleLogin = async () => {
-    if (email && users.find((user) => user.email === email)) {
-      localStorage.setItem("email", email);
-      router.push("/add-voice");
-    } else console.log("User not found!");
+    if (email && password) {
+      if (
+        users.find((user) => user.email === email && user.password === password)
+      ) {
+        localStorage.setItem("email", email);
+        router.push("/add-voice");
+      } else {
+        toast({
+          title: "Error",
+          description: "Invalid email or password!",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    } else {
+      toast({
+        title: "Error",
+        description: "Please enter your email and password!",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
 
   useEffect(() => {
@@ -132,14 +163,6 @@ const AuthPage = () => {
             type="password"
             onChange={(e) => setPassword(e.target.value)}
           />
-          {!isLogin && (
-            <Input
-              placeholder="Confirm Password"
-              size="lg"
-              variant="filled"
-              type="password"
-            />
-          )}
           {isLogin ? (
             <Button
               colorScheme="teal"

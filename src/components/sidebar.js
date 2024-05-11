@@ -118,7 +118,7 @@ const Sidebar = ({ userEmail }) => {
               <HStack spacing={4}>
                 <IconButton
                   icon={<BsSoundwave size="1.4em"/>}
-                  aria-label="Another Page"
+                  aria-label="Text to Speech"
                   bg="white"
                   _hover={{ bg: 'gray.100' }}
                 />
@@ -219,7 +219,7 @@ const Sidebar = ({ userEmail }) => {
             <DrawerBody display="flex" flexDirection="column">
               <VStack spacing={4} flex="1">
                 <Button w="full" leftIcon={<MdRecordVoiceOver size="1.4em"/>} onClick={() => router.push('/add-voice')}>Add Voice</Button>
-                <Button w="full" leftIcon={<BsSoundwave size="1.4em"/>} onClick={() => router.push('/text-to-speech')}>Another Page</Button>
+                <Button w="full" leftIcon={<BsSoundwave size="1.4em"/>} onClick={() => router.push('/text-to-speech')}>Text to Speech</Button>
                 <Button w="full" leftIcon={<HiTranslate size="1.4em"/>} onClick={() => router.push('/Translator')}>Translator</Button>
               </VStack>
               <VStack spacing={4} mt="auto">

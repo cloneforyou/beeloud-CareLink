@@ -10,6 +10,7 @@ import {
   Text,
   HStack,
   useColorModeValue,
+  useToast,
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { FaPlay } from "react-icons/fa";
@@ -30,8 +31,8 @@ const TextToSpeechPage = () => {
   const [users, setUsers] = useState([]);
   const [maxCharacters, setMaxCharacters] = useState(0);
   const [AudioFile, setAudioFile] = useState();
-
-  // const maxCharacters = 2000;
+  const [isGenerating, setIsGenerating] = useState(false);
+  const toast = useToast();
 
   const [voice, setVoice] = useState("S74cHu2GGyVqXFRq8lGf");
 
@@ -40,21 +41,20 @@ const TextToSpeechPage = () => {
     "linear(to-r, gray.800, gray.700, gray.600)"
   );
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const response = await fetch("/api/users");
-        const data = await response.json();
-        const email = localStorage.getItem("email");
-        setEmail(email);
-        setUsers(data);
-        const user = data.find((user) => user.email === email);
-        setVoices(user.voices);
-        setMaxCharacters(user.limit);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
+  async function fetchUsers() {
+    try {
+      const response = await fetch("/api/users");
+      const data = await response.json();
+      const email = localStorage.getItem("email");
+      setEmail(email);
+      const user = data.find((user) => user.email === email);
+      setVoices(user.voices);
+      setMaxCharacters(user.limit);
+    } catch (error) {
+      console.error("Error fetching users:", error);
     }
+  }
+  useEffect(() => {
     fetchUsers();
   }, []);
 
@@ -68,7 +68,18 @@ const TextToSpeechPage = () => {
   const handleVoiceChange = (e) => setSelectedVoice(e.target.value);
 
   const handleGenerateSpeech = async () => {
+    if (!selectedVoice) {
+      toast({
+        title: "Error",
+        description: "You have to select Voice!",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     try {
+      setIsGenerating(true);
       const options = {
         method: "POST",
         headers: {
@@ -99,10 +110,15 @@ const TextToSpeechPage = () => {
         body: JSON.stringify(userData),
       })
         .then((response) => response.json())
-        .then((data) => console.log("Updated:", data))
+        .then((data) => {
+          console.log("Generated:", data);
+          fetchUsers();
+        })
         .catch((error) => console.error("Error adding user:", error));
     } catch (error) {
       console.error("Error:", error);
+    } finally {
+      setIsGenerating(false);
     }
 
     console.log(
@@ -156,9 +172,9 @@ const TextToSpeechPage = () => {
               <Button variant="link" size="sm">
                 GENERATE
               </Button>
-              <Button variant="link" size="sm">
+              {/* <Button variant="link" size="sm">
                 HISTORY
-              </Button>
+              </Button> */}
             </HStack>
             <MotionTextarea
               placeholder="Enter the text you want to say..."
@@ -200,8 +216,9 @@ const TextToSpeechPage = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.6 }}
+                isDisabled={isGenerating}
               >
-                Generate
+                {isGenerating ? "Generating.." : "Generate"}
               </MotionButton>
             </HStack>
             {AudioFile && (
