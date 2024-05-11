@@ -27,6 +27,11 @@ const TextToSpeechPage = () => {
   const [selectedVoice, setSelectedVoice] = useState("");
   const [voices, setVoices] = useState([]);
   const [email, setEmail] = useState();
+  const [users, setUsers] = useState([]);
+  const [maxCharacters, setMaxCharacters] = useState(0);
+  const [AudioFile, setAudioFile] = useState();
+
+  // const maxCharacters = 2000;
 
   const [voice, setVoice] = useState("S74cHu2GGyVqXFRq8lGf");
 
@@ -35,13 +40,6 @@ const TextToSpeechPage = () => {
     "linear(to-r, gray.800, gray.700, gray.600)"
   );
 
-  // useEffect(() => {
-  //   if (typeof window !== 'undefined') {
-  //     const savedVoices = JSON.parse(localStorage.getItem('voices')) || [];
-  //     setVoices(savedVoices);
-  //   }
-  // }, []);
-
   useEffect(() => {
     async function fetchUsers() {
       try {
@@ -49,8 +47,10 @@ const TextToSpeechPage = () => {
         const data = await response.json();
         const email = localStorage.getItem("email");
         setEmail(email);
+        setUsers(data);
         const user = data.find((user) => user.email === email);
         setVoices(user.voices);
+        setMaxCharacters(user.limit);
       } catch (error) {
         console.error("Error fetching users:", error);
       }
@@ -58,9 +58,14 @@ const TextToSpeechPage = () => {
     fetchUsers();
   }, []);
 
-  const handleTextChange = (e) => setText(e.target.value);
+  const handleTextChange = (e) => {
+    const inputText = e.target.value;
+    if (inputText.length <= Number(maxCharacters)) {
+      setText(e.target.value);
+    }
+  };
+
   const handleVoiceChange = (e) => setSelectedVoice(e.target.value);
-  const [AudioFile, setAudioFile] = useState();
 
   const handleGenerateSpeech = async () => {
     try {
@@ -79,6 +84,23 @@ const TextToSpeechPage = () => {
       );
       const blob = await response.blob();
       setAudioFile(URL.createObjectURL(blob));
+
+      const userData = {
+        action: "updateLimit",
+        email: email,
+        limit: Number(maxCharacters) - text.length,
+      };
+
+      fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(userData),
+      })
+        .then((response) => response.json())
+        .then((data) => console.log("Updated:", data))
+        .catch((error) => console.error("Error adding user:", error));
     } catch (error) {
       console.error("Error:", error);
     }
@@ -90,7 +112,6 @@ const TextToSpeechPage = () => {
 
   return (
     <Box bgGradient={bgGradient} minH="100vh">
-      <Sidebar userEmail={email} />
 
       {/* Main Content */}
       <Flex
@@ -149,6 +170,11 @@ const TextToSpeechPage = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             />
+            <HStack justify="end" w="full">
+              <Text fontSize={"sm"}>
+                {text.length}/{maxCharacters}
+              </Text>
+            </HStack>
             <HStack justify="space-between" w="full">
               <MotionSelect
                 placeholder="Select Voice"

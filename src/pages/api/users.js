@@ -5,7 +5,7 @@ import connectMongoDB from "../../../lib/mongodb";
 
 export default async function handler(req, res) {
   await connectMongoDB();
-  const { action, name, email, password, voices } = req.body;
+  const { action, name, email, password, limit, voices } = req.body;
 
   if (req.method === "GET") {
     try {
@@ -18,19 +18,36 @@ export default async function handler(req, res) {
     try {
       switch (action) {
         case "create":
-          const newUser = new Users({ name, email, password, voices });
+          const newUser = new Users({ name, email, password, limit, voices });
           await newUser.save();
           res.status(201).json(newUser);
           break;
+        case "getUserByEmail":
+          const user = await Users.findOne({ email });
+          if (!user) {
+            return res.status(404).json({ error: "User not found" });
+          }
+          res.status(200).json(user);
+          break;
         case "updateVoice":
           const existingUser = await Users.findOne({ email });
-          console.log(existingUser);
           if (!existingUser) {
             return res.status(404).json({ error: "User not found" });
           }
           existingUser.voices.push(voices);
           await existingUser.save();
           res.status(200).json(existingUser);
+          break;
+        case "updateLimit":
+          const existiingUser = await Users.findOneAndUpdate(
+            { email },
+            { limit }
+          );
+          if (!existiingUser) {
+            return res.status(404).json({ error: "User not found" });
+          }
+          await existiingUser.save();
+          res.status(200).json(existiingUser);
           break;
         case "removeVoice":
           const userToRemoveVoice = await Users.findOne({ email });

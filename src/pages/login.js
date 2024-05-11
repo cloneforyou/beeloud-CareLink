@@ -26,6 +26,7 @@ const AuthPage = () => {
   const [name, setName] = useState();
   const [email, setEmail] = useState();
   const [password, setPassword] = useState();
+  const maxCharacters = 2000;
 
   const handleToggle = () => {
     setIsLogin(!isLogin);
@@ -42,7 +43,8 @@ const AuthPage = () => {
         name: name,
         email: email,
         password: password,
-        voices:[]
+        limit: maxCharacters,
+        voices: [],
       };
 
       fetch("/api/users", {
