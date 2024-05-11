@@ -33,8 +33,8 @@ const AuthPage = () => {
 
   const handleSigup = async () => {
     try {
-      if (users.length >= 5) {
-        console.log("no more than 5 users");
+      if (users.length >= 30) {
+        console.log("no more than 30 users");
         return;
       }
       const userData = {
