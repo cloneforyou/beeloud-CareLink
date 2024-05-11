@@ -23,23 +23,21 @@ export default async function handler(req, res) {
           res.status(201).json(newUser);
           break;
         case "updateVoice":
-          // Update tags of an existing post
           const existingUser = await Users.findOne({ email });
           console.log(existingUser);
           if (!existingUser) {
             return res.status(404).json({ error: "User not found" });
           }
-          existingUser.voices.push(voices); // Push new tags to existing tags array
+          existingUser.voices.push(voices);
           await existingUser.save();
           res.status(200).json(existingUser);
           break;
         case "removeVoice":
-          // Remove roles from an existing user
           const userToRemoveVoice = await Users.findOne({ email });
           if (!userToRemoveVoice) {
             return res.status(404).json({ error: "User not found" });
           }
-          userToRemoveVoice.voices.pull(voices); // Remove specified roles from the roles array
+          userToRemoveVoice.voices.pull(voices);
           await userToRemoveVoice.save();
           res.status(200).json(userToRemoveVoice);
           break;

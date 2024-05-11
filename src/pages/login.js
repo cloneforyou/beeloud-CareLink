@@ -33,10 +33,10 @@ const AuthPage = () => {
 
   const handleSigup = async () => {
     try {
-      // if (users.length >= 5) {
-      //   console.log("no more than 5 users");
-      //   return;
-      // }
+      if (users.length >= 5) {
+        console.log("no more than 5 users");
+        return;
+      }
       const userData = {
         action: "create",
         name: name,
@@ -66,7 +66,7 @@ const AuthPage = () => {
   };
 
   const handleLogin = async () => {
-    if (users.find((user) => user.email === email)) {
+    if (email && users.find((user) => user.email === email)) {
       localStorage.setItem("email", email);
       router.push("/add-voice");
     } else console.log("User not found!");
