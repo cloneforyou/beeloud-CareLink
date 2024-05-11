@@ -33,6 +33,7 @@ import {
 import Sidebar from "../components/sidebar";
 import { useRouter } from "next/router";
 import ReactAudioPlayer from "react-audio-player";
+import { MdDelete } from "react-icons/md";
 
 const MotionBox = motion(Box);
 const ELEVENLABS_API_KEY = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
@@ -49,7 +50,6 @@ const AddVoicePage = () => {
   const [name, setName] = useState();
   const [description, setDescription] = useState();
   const [email, setEmail] = useState();
-  const [users, setUsers] = useState([]);
 
   const fileInputRef = useRef(null);
   const bgGradient = useColorModeValue(
@@ -57,24 +57,11 @@ const AddVoicePage = () => {
     "linear(to-r, gray.800, gray.700, gray.600)"
   );
 
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     const savedVoices = JSON.parse(localStorage.getItem("voices")) || [];
-  //     setVoices(savedVoices);
-  //   }
-  // }, []);
-
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     localStorage.setItem("voices", JSON.stringify(voices));
-  //   }
-  // }, [voices]);
-
   const openModal = () => {
-    // if (voices.length >= 2) {
-    //   console.log("You can upload only two voices.");
-    //   return;
-    // }
+    if (voices.length >= 2) {
+      console.log("You can upload only two voices.");
+      return;
+    }
     setIsModalOpen(true);
   };
   const closeModal = () => setIsModalOpen(false);
@@ -97,6 +84,8 @@ const AddVoicePage = () => {
   };
 
   const [AudioFile, setAudioFile] = useState();
+  const [cloning, setCloning] = useState(false);
+
   const stopRecording = () => {
     console.log(mediaRecorder);
     if (mediaRecorder && mediaRecorder.state !== "inactive") {
@@ -113,23 +102,16 @@ const AddVoicePage = () => {
     setAudioFile(URL.createObjectURL(blob));
   };
 
-  // const addVoice = () => {
-  //   const newVoice = {
-  //     id: voices.length + 1,
-  //     name: "Ali Raza",
-  //     description: "Clone of close family member",
-  //   };
-  //   setVoices([...voices, newVoice]);
-  //   closeModal();
-  // };
-
   const handleAddVoice = async () => {
     if (files.length > 0) {
       try {
         const form = new FormData();
-        form.append("name", name);
+        form.append("name", name ? name : "Voice");
         form.append("files", files[0]);
-        form.append("description", description);
+        form.append(
+          "description",
+          description ? description : "No description provided."
+        );
         // form.append("labels", "audio");
 
         const options = {
@@ -141,6 +123,7 @@ const AddVoicePage = () => {
         };
 
         // options.body = form;
+        setCloning(true);
 
         const response = await fetch(
           "https://api.elevenlabs.io/v1/voices/add",
@@ -153,8 +136,10 @@ const AddVoicePage = () => {
           email: email,
           voices: {
             voice_id: data?.voice_id,
-            voiceName: name,
-            voiceDescription: description,
+            voiceName: name ? name : "Voice",
+            voiceDescription: description
+              ? description
+              : "No description provided.",
           },
         };
 
@@ -168,9 +153,13 @@ const AddVoicePage = () => {
           .then((response) => response.json())
           .then((data) => console.log("New user added:", data))
           .catch((error) => console.error("Error adding user:", error));
+        router.reload();
         closeModal();
       } catch (error) {
         console.error("Error fetching users:", error);
+      } finally {
+        setCloning(false);
+        setFiles([]);
       }
     }
   };
@@ -250,6 +239,9 @@ const AddVoicePage = () => {
   const triggerFileInput = () => {
     fileInputRef.current.click();
   };
+  const handleRemoveFiles = () => {
+    setFiles([]);
+  };
 
   useEffect(() => {
     async function fetchUsers() {
@@ -260,7 +252,6 @@ const AddVoicePage = () => {
         const user = data.find((user) => user.email === email);
         console.log(user.voices);
         setEmail(email);
-        setUsers(data);
         setVoices(user.voices);
       } catch (error) {
         console.error("Error fetching users:", error);
@@ -387,15 +378,34 @@ const AddVoicePage = () => {
                 // onClick={triggerFileInput}
               >
                 <VStack>
-                  <IconButton
-                    icon={<FaUpload />}
-                    aria-label="Upload"
-                    variant="outline"
-                    size="lg"
-                    onClick={triggerFileInput}
-                  />
-                  <Text>Click to upload a file or drag and drop</Text>
-                  <Text>Audio files, up to 10MB each</Text>
+                  <Box gap="10px" display="flex">
+                    <IconButton
+                      icon={<FaUpload />}
+                      aria-label="Upload"
+                      variant="outline"
+                      size="lg"
+                      onClick={triggerFileInput}
+                    />
+                    {files.length > 0 && (
+                      <IconButton
+                        icon={<MdDelete />}
+                        aria-label="Upload"
+                        variant="outline"
+                        size="lg"
+                        onClick={handleRemoveFiles}
+                      />
+                    )}
+                  </Box>
+                  {files.length > 0 ? (
+                    <Text>
+                      File selected: <b>{files[0]?.name}</b>
+                    </Text>
+                  ) : (
+                    <>
+                      <Text>Click to upload a file or drag and drop</Text>
+                      <Text>Audio files, up to 10MB each</Text>
+                    </>
+                  )}
                   <Text>OR</Text>
                   <Button
                     leftIcon={<FaMicrophone />}
@@ -436,12 +446,6 @@ const AddVoicePage = () => {
                   </Text>
                 </Box>
               </Box>
-              <Box>
-                <Text>Labels 0 / 5</Text>
-                <Box bg="gray.100" p={4} borderRadius="md">
-                  <Text>No labels. Click + to add a first one.</Text>
-                </Box>
-              </Box>
               <Textarea
                 placeholder='How would you describe the voice? e.g. "An old American male voice with a slight hoarseness in his throat. Perfect for news."'
                 onChange={(e) => setDescription(e.target.value)}
@@ -452,8 +456,12 @@ const AddVoicePage = () => {
             <Button variant="ghost" onClick={closeModal}>
               Cancel
             </Button>
-            <Button colorScheme="teal" onClick={handleAddVoice}>
-              Add Voice
+            <Button
+              colorScheme="teal"
+              isDisabled={cloning}
+              onClick={handleAddVoice}
+            >
+              {cloning ? "Cloning & Uploading..." : "Add Voice"}
             </Button>
           </ModalFooter>
         </ModalContent>
