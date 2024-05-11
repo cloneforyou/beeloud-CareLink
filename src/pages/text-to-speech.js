@@ -112,6 +112,7 @@ const TextToSpeechPage = () => {
 
   return (
     <Box bgGradient={bgGradient} minH="100vh">
+      <Sidebar userEmail={email} />
 
       {/* Main Content */}
       <Flex
