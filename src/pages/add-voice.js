@@ -1,72 +1,248 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from "react";
 import {
-  Box, Flex, Heading, VStack, useColorModeValue, Modal, ModalOverlay,
-  ModalContent, ModalHeader, ModalCloseButton, ModalBody, ModalFooter,
-  Button, Input, Textarea, IconButton, Text, HStack, Grid, GridItem
-} from '@chakra-ui/react';
-import { motion } from 'framer-motion';
-import { FaPlus, FaMicrophone, FaEdit, FaTrash, FaBolt, FaUpload } from 'react-icons/fa';
-import Sidebar from '../components/sidebar';
+  Box,
+  Flex,
+  Heading,
+  VStack,
+  useColorModeValue,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Input,
+  Textarea,
+  IconButton,
+  Text,
+  HStack,
+  Grid,
+  GridItem,
+} from "@chakra-ui/react";
+import { motion } from "framer-motion";
+import {
+  FaPlus,
+  FaMicrophone,
+  FaEdit,
+  FaTrash,
+  FaBolt,
+  FaUpload,
+} from "react-icons/fa";
+import Sidebar from "../components/sidebar";
+import { useRouter } from "next/router";
+import ReactAudioPlayer from "react-audio-player";
 
 const MotionBox = motion(Box);
+const ELEVENLABS_API_KEY = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
 
 const AddVoicePage = () => {
+  const router = useRouter();
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
   const [audioChunks, setAudioChunks] = useState([]);
   const [voices, setVoices] = useState([]);
+
+  const [name, setName] = useState();
+  const [description, setDescription] = useState();
+  const [email, setEmail] = useState();
+  const [users, setUsers] = useState([]);
+
   const fileInputRef = useRef(null);
-  const bgGradient = useColorModeValue("linear(to-r, teal.50, green.50, blue.50)", "linear(to-r, gray.800, gray.700, gray.600)");
+  const bgGradient = useColorModeValue(
+    "linear(to-r, teal.50, green.50, blue.50)",
+    "linear(to-r, gray.800, gray.700, gray.600)"
+  );
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedVoices = JSON.parse(localStorage.getItem('voices')) || [];
-      setVoices(savedVoices);
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     const savedVoices = JSON.parse(localStorage.getItem("voices")) || [];
+  //     setVoices(savedVoices);
+  //   }
+  // }, []);
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('voices', JSON.stringify(voices));
-    }
-  }, [voices]);
+  // useEffect(() => {
+  //   if (typeof window !== "undefined") {
+  //     localStorage.setItem("voices", JSON.stringify(voices));
+  //   }
+  // }, [voices]);
 
-  const openModal = () => setIsModalOpen(true);
+  const openModal = () => {
+    // if (voices.length >= 2) {
+    //   console.log("You can upload only two voices.");
+    //   return;
+    // }
+    setIsModalOpen(true);
+  };
   const closeModal = () => setIsModalOpen(false);
-
+  let chunks = [];
   const startRecording = async () => {
+    // setAudioChunks([])
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     const recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = event => {
+    recorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
-        setAudioChunks(prev => [...prev, event.data]);
+        setAudioChunks((prev) => [...prev, event.data]);
+        // chunks.push(event.data);
       }
     };
     recorder.start();
+    console.log(recorder);
+
     setMediaRecorder(recorder);
     setIsRecording(true);
   };
 
+  const [AudioFile, setAudioFile] = useState();
   const stopRecording = () => {
-    mediaRecorder.stop();
+    console.log(mediaRecorder);
+    if (mediaRecorder && mediaRecorder.state !== "inactive") {
+      mediaRecorder.stop();
+    }
+    console.log(mediaRecorder);
     setIsRecording(false);
+
+    const blob = new Blob(audioChunks, { type: "audio/webm" });
+    const audioURL = URL.createObjectURL(blob);
+    const audioElement = new Audio(audioURL);
+
+    console.log(audioChunks);
+    setAudioFile(URL.createObjectURL(blob));
   };
 
-  const addVoice = () => {
-    const newVoice = {
-      id: voices.length + 1,
-      name: "Ali Raza",
-      description: "Clone of close family member"
-    };
-    setVoices([...voices, newVoice]);
-    closeModal();
-  };
+  // const addVoice = () => {
+  //   const newVoice = {
+  //     id: voices.length + 1,
+  //     name: "Ali Raza",
+  //     description: "Clone of close family member",
+  //   };
+  //   setVoices([...voices, newVoice]);
+  //   closeModal();
+  // };
 
-  const handleFileUpload = (event) => {
-    const files = event.target.files;
+  const handleAddVoice = async () => {
     if (files.length > 0) {
-      console.log('Files selected:', files);
+      try {
+        const form = new FormData();
+        form.append("name", name);
+        form.append("files", files[0]);
+        form.append("description", description);
+        // form.append("labels", "audio");
+
+        const options = {
+          method: "POST",
+          headers: {
+            "xi-api-key": ELEVENLABS_API_KEY,
+          },
+          body: form,
+        };
+
+        // options.body = form;
+
+        const response = await fetch(
+          "https://api.elevenlabs.io/v1/voices/add",
+          options
+        );
+        const data = await response.json();
+
+        const voiceData = {
+          action: "updateVoice",
+          email: email,
+          voices: {
+            voice_id: data?.voice_id,
+            voiceName: name,
+            voiceDescription: description,
+          },
+        };
+
+        fetch("/api/users", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(voiceData),
+        })
+          .then((response) => response.json())
+          .then((data) => console.log("New user added:", data))
+          .catch((error) => console.error("Error adding user:", error));
+        closeModal();
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    }
+  };
+  const handleRemoveVoice = async () => {
+    try {
+      const voiceData = {
+        action: "removeVoice",
+        email: email,
+        voices: {
+          voiceName: name,
+          voiceDescription: description,
+        },
+      };
+      fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(voiceData),
+      })
+        .then((response) => response.json())
+        .then((data) => {
+          console.log("New user added:", data);
+          router.reload();
+        })
+        .catch((error) => console.error("Error adding user:", error));
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  const convertBlobToMP3 = () => {
+    if (!audioChunks) {
+      console.warn("No blob available");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const base64String = btoa(
+        new Uint8Array(reader.result).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          ""
+        )
+      );
+
+      const dataUrl = `data:audio/mp3;base64,${base64String}`;
+
+      // Create a link with the data URL
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = "audio.mp3";
+
+      // Trigger a click event on the link to prompt download
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    };
+
+    reader.readAsArrayBuffer(audioChunks[0]);
+  };
+
+  const [files, setFiles] = useState([]);
+  const handleFileUpload = (event) => {
+    console.log("files");
+    const files = event.target.files;
+    console.log("filesArray");
+    const filesArray = Array.from(files);
+    console.log(filesArray);
+    if (files.length > 0) {
+      setFiles(files);
+
       // Handle the file upload logic here
     }
   };
@@ -75,18 +251,48 @@ const AddVoicePage = () => {
     fileInputRef.current.click();
   };
 
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const response = await fetch("/api/users");
+        const data = await response.json();
+        const email = localStorage.getItem("email");
+        const user = data.find((user) => user.email === email);
+        console.log(user.voices);
+        setEmail(email);
+        setUsers(data);
+        setVoices(user.voices);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    }
+    fetchUsers();
+  }, []);
+
   return (
     <Box bgGradient={bgGradient} minH="100vh">
-      <Sidebar userEmail="example@example.com" />
+      <Sidebar userEmail={email} />
 
       {/* Main Content */}
-      <Flex direction="column" align="center" justify="center" minH="100vh" p={4} pt={{ base: '80px', lg: '0' }}>
+      <Flex
+        direction="column"
+        align="center"
+        justify="center"
+        minH="100vh"
+        p={4}
+        pt={{ base: "80px", lg: "0" }}
+      >
         <Box textAlign="center" mb={6}>
-          <Heading as="h2" size="xl" mb={2}>Add/Clone Voice</Heading>
-          <Text fontSize="md">Here you can add the voices that are helpful for the patients, all the voices stored here are visible in the Text to Speech page.</Text>
+          <Heading as="h2" size="xl" mb={2}>
+            Add/Clone Voice
+          </Heading>
+          <Text fontSize="md">
+            Here you can add the voices that are helpful for the patients, all
+            the voices stored here are visible in the Text to Speech page.
+          </Text>
         </Box>
-        
-        {typeof window !== 'undefined' && (
+
+        {typeof window !== "undefined" && (
           <MotionBox
             as="button"
             w="300px"
@@ -104,29 +310,52 @@ const AddVoicePage = () => {
             mb={4}
           >
             <FaPlus size="40px" color="gray.500" />
-            <Text mt={2} fontSize="md">Add Generative or Cloned Voice</Text>
+            <Text mt={2} fontSize="md">
+              Add Generative or Cloned Voice
+            </Text>
           </MotionBox>
         )}
 
         {/* Voice Cards */}
-        <Grid templateColumns={{ base: 'repeat(1, 1fr)', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }} gap={6} w="full" maxW="1200px">
-          {voices.map(voice => (
-            <GridItem key={voice.id} w="100%">
+        <Grid
+          templateColumns={{
+            base: "repeat(1, 1fr)",
+            md: "repeat(2, 1fr)",
+            lg: "repeat(3, 1fr)",
+          }}
+          gap={6}
+          w="full"
+          maxW="1200px"
+        >
+          {voices.map((voice) => (
+            <GridItem key={voice._id} w="100%">
               <Box p={4} borderWidth="1px" borderRadius="lg" boxShadow="md">
                 <HStack justify="space-between">
                   <Box>
                     <HStack>
                       <FaBolt />
-                      <Text fontWeight="bold" fontSize="lg">{voice.name}</Text>
+                      <Text fontWeight="bold" fontSize="lg">
+                        {voice.voiceName}
+                      </Text>
                     </HStack>
-                    <Text>{voice.description}</Text>
+                    <Text>{voice.voiceDescription}</Text>
                   </Box>
                   <Button size="sm">ID</Button>
                 </HStack>
                 <HStack mt={4} justify="space-between">
-                  <Button size="sm" leftIcon={<FaMicrophone />}>Use</Button>
-                  <Button size="sm" leftIcon={<FaEdit />}>Edit</Button>
-                  <Button size="sm" leftIcon={<FaTrash />}>Remove</Button>
+                  {/* <Button size="sm" leftIcon={<FaMicrophone />}>
+                    Use
+                  </Button> */}
+                  <Button size="sm" leftIcon={<FaEdit />}>
+                    Edit
+                  </Button>
+                  <Button
+                    size="sm"
+                    leftIcon={<FaTrash />}
+                    onClick={handleRemoveVoice}
+                  >
+                    Remove
+                  </Button>
                 </HStack>
               </Box>
             </GridItem>
@@ -142,7 +371,10 @@ const AddVoicePage = () => {
           <ModalCloseButton />
           <ModalBody>
             <VStack spacing={4} align="stretch">
-              <Input placeholder="Name" />
+              <Input
+                placeholder="Name"
+                onChange={(e) => setName(e.target.value)}
+              />
               <Box
                 w="full"
                 h="200px"
@@ -152,7 +384,7 @@ const AddVoicePage = () => {
                 alignItems="center"
                 justifyContent="center"
                 cursor="pointer"
-                onClick={triggerFileInput}
+                // onClick={triggerFileInput}
               >
                 <VStack>
                   <IconButton
@@ -160,27 +392,48 @@ const AddVoicePage = () => {
                     aria-label="Upload"
                     variant="outline"
                     size="lg"
+                    onClick={triggerFileInput}
                   />
                   <Text>Click to upload a file or drag and drop</Text>
                   <Text>Audio files, up to 10MB each</Text>
                   <Text>OR</Text>
-                  <Button leftIcon={<FaMicrophone />} onClick={isRecording ? stopRecording : startRecording}>
-                    {isRecording ? 'Stop Recording' : 'Record Audio'}
+                  <Button
+                    leftIcon={<FaMicrophone />}
+                    onClick={isRecording ? stopRecording : startRecording}
+                  >
+                    {isRecording ? "Stop Recording" : "Record Audio"}
                   </Button>
+
+                  {AudioFile && (
+                    <ReactAudioPlayer
+                      src={AudioFile}
+                      autoPlay={true}
+                      controls
+                    />
+                  )}
                 </VStack>
                 <Input
                   type="file"
                   accept=".mp3"
                   ref={fileInputRef}
-                  style={{ display: 'none' }}
+                  style={{ display: "none" }}
                   onChange={handleFileUpload}
                 />
+
+                {/* <button onClick={convertBlobToMP3}>Convert to MP3</button> */}
               </Box>
               <Box>
                 <Text>Samples 0 / 25</Text>
                 <Box bg="gray.100" p={4} borderRadius="md">
-                  <Text>No items uploaded yet. Upload audio samples of the voice you would like to clone.</Text>
-                  <Text>Sample quality is more important than quantity. Noisy samples may give bad results. Providing more than 5 minutes of audio in total brings little improvement.</Text>
+                  <Text>
+                    No items uploaded yet. Upload audio samples of the voice you
+                    would like to clone.
+                  </Text>
+                  <Text>
+                    Sample quality is more important than quantity. Noisy
+                    samples may give bad results. Providing more than 5 minutes
+                    of audio in total brings little improvement.
+                  </Text>
                 </Box>
               </Box>
               <Box>
@@ -189,12 +442,19 @@ const AddVoicePage = () => {
                   <Text>No labels. Click + to add a first one.</Text>
                 </Box>
               </Box>
-              <Textarea placeholder='How would you describe the voice? e.g. "An old American male voice with a slight hoarseness in his throat. Perfect for news."' />
+              <Textarea
+                placeholder='How would you describe the voice? e.g. "An old American male voice with a slight hoarseness in his throat. Perfect for news."'
+                onChange={(e) => setDescription(e.target.value)}
+              />
             </VStack>
           </ModalBody>
           <ModalFooter>
-            <Button variant="ghost" onClick={closeModal}>Cancel</Button>
-            <Button colorScheme="teal" onClick={addVoice}>Add Voice</Button>
+            <Button variant="ghost" onClick={closeModal}>
+              Cancel
+            </Button>
+            <Button colorScheme="teal" onClick={handleAddVoice}>
+              Add Voice
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

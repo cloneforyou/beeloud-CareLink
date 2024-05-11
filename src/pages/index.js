@@ -67,7 +67,7 @@ const Home = () => {
       <Box as="section" id="hero" minH="100vh" display="flex" alignItems="center" justifyContent="center" position="relative">
         <VStack spacing={8} align="center">
           <VStack spacing={4} align="center" maxW="lg" textAlign="center">
-            <Heading as="h2" size="2xl" lineHeight="shorter">Revolutionizing Dementia Care with AI</Heading>
+            <Heading as="h2" size="2xl" lineHeight="shorter">Improving Outcomes with Dementia Care using AI</Heading>
             <Text fontSize="lg">Empowering caregivers and improving patient outcomes through advanced voice cloning and AI prompting.</Text>
             <Button colorScheme="teal" size="lg" onClick={() => router.push('/login')}>Get Started</Button>
           </VStack>
