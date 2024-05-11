@@ -78,6 +78,7 @@ const Sidebar = ({ userEmail }) => {
         boxShadow="md"
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
+        zIndex={2}
       >
         <VStack spacing={4} align="start" pt={4} h="full" justify="space-between">
           <Box pl={4} textAlign="center">
