@@ -84,7 +84,7 @@ const TextToSpeechPage = () => {
             }
             console.log(hisArr);
           }
-          // response?.history?.map((his) => console.log(his?.voice_id));
+          response?.history?.map((his) => console.log(his?.voice_id));
           setHistoryVoices(hisArr);
         })
         .catch((err) => console.error(err));
@@ -95,7 +95,7 @@ const TextToSpeechPage = () => {
 
   useEffect(() => {
     fetchUsers();
-    fetchHistoryVoices();
+    // fetchHistoryVoices();
   }, []);
 
   const handleTextChange = (e) => {
@@ -167,7 +167,6 @@ const TextToSpeechPage = () => {
   };
 
   const [tapSelected, setTapselected] = useState("GENERATE");
-  ("HISTORY");
   return (
     <Box bgGradient={bgGradient} minH="100vh">
       <Sidebar userEmail={email} />
@@ -221,7 +220,10 @@ const TextToSpeechPage = () => {
               <Button
                 variant="link"
                 size="sm"
-                onClick={() => setTapselected("HISTORY")}
+                onClick={() => {
+                  fetchHistoryVoices();
+                  setTapselected("HISTORY");
+                }}
               >
                 HISTORY
               </Button>
