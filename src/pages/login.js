@@ -36,9 +36,27 @@ const AuthPage = () => {
   const handleSigup = async () => {
     try {
       if (users.length >= 30) {
-        console.log("no more than 30 users");
+        toast({
+          title: "Error",
+          description: "No more than 30 users!",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
         return;
       }
+
+      if (users.find((user) => user.email === email)) {
+        toast({
+          title: "Error",
+          description: "Email already taken!",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
+
       const userData = {
         action: "create",
         name: name,
@@ -105,17 +123,17 @@ const AuthPage = () => {
     }
   };
 
-  useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const response = await fetch("/api/users");
-        const data = await response.json();
-        console.log(data);
-        setUsers(data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-      }
+  async function fetchUsers() {
+    try {
+      const response = await fetch("/api/users");
+      const data = await response.json();
+      console.log(data);
+      setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
     }
+  }
+  useEffect(() => {
     fetchUsers();
   }, []);
 
