@@ -235,15 +235,14 @@ const AddVoicePage = () => {
 
   const handleIDVoice = async (voiceID) => {
     console.log(voiceID);
-if(!voiceID) return
-toast({
-  title: "Voice ID",
-  description: `ID: ${voiceID}`,
-  status: "success",
-  duration: 3000,
-  isClosable: true,
-});
-
+    if (!voiceID) return;
+    toast({
+      title: "Voice ID",
+      description: `ID: ${voiceID}`,
+      status: "success",
+      duration: 3000,
+      isClosable: true,
+    });
   };
   const [files, setFiles] = useState([]);
   const handleFileUpload = (event) => {
@@ -315,7 +314,6 @@ toast({
         justify="center"
         minH="100vh"
         p={4}
-        pl={20}
         pt={{ base: "80px", lg: "0" }}
       >
         <Box textAlign="center" mb={6}>

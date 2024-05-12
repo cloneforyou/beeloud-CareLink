@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import {
   Box,
+  Divider,
+  AbsoluteCenter,
   Flex,
   Heading,
   VStack,
@@ -14,21 +16,26 @@ import {
 } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import { FaPlay } from "react-icons/fa";
+import { ImFilesEmpty } from "react-icons/im";
 import Sidebar from "../components/sidebar";
 import ReactAudioPlayer from "react-audio-player";
+import AudioPlay from "./AudioPlayer";
 
 const MotionBox = motion(Box);
+const MotionText = motion(Text);
 const MotionButton = motion(Button);
 const MotionTextarea = motion(Textarea);
 const MotionSelect = motion(Select);
+
 const ELEVENLABS_API_KEY = process.env.NEXT_PUBLIC_ELEVENLABS_API_KEY;
 
 const TextToSpeechPage = () => {
   const [text, setText] = useState("");
   const [selectedVoice, setSelectedVoice] = useState("");
   const [voices, setVoices] = useState([]);
+  const [historyVoices, setHistoryVoices] = useState([]);
   const [email, setEmail] = useState();
-  const [users, setUsers] = useState([]);
+  const [user, setUser] = useState([]);
   const [maxCharacters, setMaxCharacters] = useState(0);
   const [AudioFile, setAudioFile] = useState();
   const [isGenerating, setIsGenerating] = useState(false);
@@ -48,14 +55,47 @@ const TextToSpeechPage = () => {
       const email = localStorage.getItem("email");
       setEmail(email);
       const user = data.find((user) => user.email === email);
+      setUser(user);
       setVoices(user.voices);
       setMaxCharacters(user.limit);
     } catch (error) {
       console.error("Error fetching users:", error);
     }
   }
+
+  async function fetchHistoryVoices() {
+    try {
+      const options = {
+        method: "GET",
+        headers: { "xi-api-key": ELEVENLABS_API_KEY },
+      };
+
+      fetch("https://api.elevenlabs.io/v1/history", options)
+        .then((response) => response.json())
+        .then((response) => {
+          const hisArr = [];
+          for (let i of user.voices ?? []) {
+            for (let j of response.history ?? []) {
+              if (
+                j.voice_id === i.voice_id
+                //"qRc7Z9htMT4mENPrSkN1"
+              )
+                hisArr.push(j);
+            }
+            console.log(hisArr);
+          }
+          // response?.history?.map((his) => console.log(his?.voice_id));
+          setHistoryVoices(hisArr);
+        })
+        .catch((err) => console.error(err));
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  }
+
   useEffect(() => {
     fetchUsers();
+    fetchHistoryVoices();
   }, []);
 
   const handleTextChange = (e) => {
@@ -126,6 +166,8 @@ const TextToSpeechPage = () => {
     );
   };
 
+  const [tapSelected, setTapselected] = useState("GENERATE");
+  ("HISTORY");
   return (
     <Box bgGradient={bgGradient} minH="100vh">
       <Sidebar userEmail={email} />
@@ -137,6 +179,7 @@ const TextToSpeechPage = () => {
         justify="center"
         minH="100vh"
         p={4}
+        pl={20}
         pt={{ base: "80px", lg: "0" }}
       >
         <MotionBox
@@ -169,60 +212,104 @@ const TextToSpeechPage = () => {
         >
           <VStack spacing={4} align="stretch">
             <HStack justify="space-between" w="full">
-              <Button variant="link" size="sm">
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => setTapselected("GENERATE")}
+              >
                 GENERATE
               </Button>
-              {/* <Button variant="link" size="sm">
+              <Button
+                variant="link"
+                size="sm"
+                onClick={() => setTapselected("HISTORY")}
+              >
                 HISTORY
-              </Button> */}
+              </Button>
             </HStack>
-            <MotionTextarea
-              placeholder="Enter the text you want to say..."
-              value={text}
-              onChange={handleTextChange}
-              rows={6}
-              resize="none"
-              focusBorderColor="teal.500"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            />
-            <HStack justify="end" w="full">
-              <Text fontSize={"sm"}>
-                {text.length}/{maxCharacters}
-              </Text>
-            </HStack>
-            <HStack justify="space-between" w="full">
-              <MotionSelect
-                placeholder="Select Voice"
-                value={selectedVoice}
-                onChange={handleVoiceChange}
-                focusBorderColor="teal.500"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-              >
-                {voices.map((voice) => (
-                  <option key={voice._id} value={voice.voice_id}>
-                    {voice.voiceName}
-                  </option>
-                ))}
-              </MotionSelect>
-              <MotionButton
-                leftIcon={<FaPlay />}
-                onClick={handleGenerateSpeech}
-                colorScheme="teal"
-                px={8}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.6 }}
-                isDisabled={isGenerating}
-              >
-                {isGenerating ? "Generating.." : "Generate"}
-              </MotionButton>
-            </HStack>
-            {AudioFile && (
-              <ReactAudioPlayer src={AudioFile} autoPlay={true} controls />
+            {tapSelected === "GENERATE" && (
+              <>
+                <MotionTextarea
+                  placeholder="Enter the text you want to say..."
+                  value={text}
+                  onChange={handleTextChange}
+                  rows={6}
+                  resize="none"
+                  focusBorderColor="teal.500"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                />
+                <HStack justify="end" w="full">
+                  <MotionText
+                    fontSize={"sm"}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                  >
+                    {text.length}/{maxCharacters}
+                  </MotionText>
+                </HStack>
+                <HStack justify="space-between" w="full">
+                  <MotionSelect
+                    placeholder="Select Voice"
+                    value={selectedVoice}
+                    onChange={handleVoiceChange}
+                    focusBorderColor="teal.500"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                  >
+                    {voices.map((voice) => (
+                      <option key={voice._id} value={voice.voice_id}>
+                        {voice.voiceName}
+                      </option>
+                    ))}
+                  </MotionSelect>
+                  <MotionButton
+                    leftIcon={<FaPlay />}
+                    onClick={handleGenerateSpeech}
+                    colorScheme="teal"
+                    px={8}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                    isDisabled={isGenerating}
+                  >
+                    {isGenerating ? "Generating.." : "Generate"}
+                  </MotionButton>
+                </HStack>
+                {AudioFile && (
+                  <ReactAudioPlayer src={AudioFile} autoPlay={true} controls />
+                )}
+              </>
+            )}
+            {tapSelected === "HISTORY" && (
+              <Box height={400} overflowY={"auto"}>
+                {historyVoices?.length === 0 ? (
+                  <MotionBox>
+                    <MotionText fontSize={"xl"} align={"center"}>
+                      Generated speech will display here
+                    </MotionText>
+                    <MotionBox
+                      height={300}
+                      overflowY="auto"
+                      display="flex"
+                      flexDirection="column"
+                      justifyContent="center"
+                      alignItems="center"
+                    >
+                      <ImFilesEmpty size={100} color="D3D3D3" />
+                    </MotionBox>
+                  </MotionBox>
+                ) : (
+                  <>
+                    {historyVoices?.map((hisVoice, i) => {
+                      return <AudioPlay key={i} file={hisVoice} />;
+                    })}
+                  </>
+                )}
+              </Box>
             )}
           </VStack>
         </MotionBox>
