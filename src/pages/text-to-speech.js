@@ -179,7 +179,6 @@ const TextToSpeechPage = () => {
         justify="center"
         minH="100vh"
         p={4}
-        pl={20}
         pt={{ base: "80px", lg: "0" }}
       >
         <MotionBox
