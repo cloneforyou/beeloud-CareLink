@@ -1,36 +1,85 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# CareLink Project
 
-## Getting Started
+## Table of Contents
 
-First, run the development server:
+1. [Introduction](#introduction)
+2. [Tech Stack](#tech-stack)
+3. [Pages and Features](#pages-and-features)
+   - [Home Page](#home-page)
+   - [Login Page](#login-page)
+   - [Add Voice Page](#add-voice-page)
+   - [Text to Speech Page](#text-to-speech-page)
+4. [Team](#team)
+5. [Demo and Screenshots](#demo-and-screenshots)
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Introduction
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+CareLink is a web application designed to enhance patient communication through advanced text-to-speech technology. The platform allows caregivers to add custom voices and generate speech from text input, providing a personalized experience for patients.
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+- **Frontend** and **Backend**: Next.js
+- **Database**: MongoDB
+- **Hosting**: Vercel
+- **Text-to-Speech API**: ElevenLabs Text-to-Speech
 
-## Learn More
+## Pages and Features
 
-To learn more about Next.js, take a look at the following resources:
+### Home Page
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **URL**: [Home](https://carelink-alpha.vercel.app/)
+- **Description**: The landing page providing an overview of CareLink’s features and functionalities.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+### Login Page
 
-## Deploy on Vercel
+- **URL**: [Login](https://carelink-alpha.vercel.app/login)
+- **Description**: Secure login page for caregivers to access their accounts using email and password.
+- **Features**:
+  - Input fields for email and password
+  - Login button
+  - Link to sign up for new users
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Add Voice Page
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- **URL**: [Add Voice](https://carelink-alpha.vercel.app/add-voice)
+- **Description**: Page for caregivers to add custom voice profiles for patients.
+- **Features**:
+  - Input fields for voice name and description
+  - Upload button for voice files
+  - Submit button to save the voice profile
+
+### Text to Speech Page
+
+- **URL**: [Text to Speech](https://carelink-alpha.vercel.app/text-to-speech)
+- **Description**: Allows caregivers to convert text into speech using selected voice profiles.
+- **Features**:
+  - Text input area for entering the text to be spoken
+  - Dropdown to select the desired voice profile
+  - Generate button to convert text to speech and play it
+
+## Team
+
+- **Project Manager**: Manraj Jawanda
+- **UI/UX Designer**: Ali Raza
+- **Frontend Developer**: Ali Raza
+- **Backend Developer**: Abdullah Alfaqi
+
+## Demo and Screenshots
+
+### Home Page
+
+![Home Page](https://carelink-alpha.vercel.app/screenshots/home.png)
+
+### Login Page
+
+![Login Page](https://carelink-alpha.vercel.app/screenshots/login.png)
+
+### Add Voice Page
+
+![Add Voice Page](https://carelink-alpha.vercel.app/screenshots/add-voice.png)
+
+### Text to Speech Page
+
+![Text to Speech Page](https://carelink-alpha.vercel.app/screenshots/text-to-speech.png)
+
+For a live demo, visit the [CareLink website](https://carelink-alpha.vercel.app/).
