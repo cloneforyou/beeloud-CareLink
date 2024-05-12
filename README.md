@@ -14,7 +14,7 @@
 
 ## Introduction
 
-CareLink is a web application designed to enhance patient communication through advanced text-to-speech technology. The platform allows caregivers to add custom voices and generate speech from text input, providing a personalized experience for patients.
+CareLink is an innovative platform designed to empower caregivers and enhance patient outcomes for individuals with dementia through advanced voice cloning and AI prompting technologies. It aims to improve patient engagement, monitor health, and support care coordination.
 
 ## Tech Stack
 
