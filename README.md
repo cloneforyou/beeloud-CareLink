@@ -68,18 +68,27 @@ CareLink is an innovative platform designed to empower caregivers and enhance pa
 
 ### Home Page
 
-![Home Page](https://carelink-alpha.vercel.app/screenshots/home.png)
+![Home Page](https://github.com/alirazacodes/CareLink/assets/109011272/711bf29e-f284-4fe0-ba31-5cad07477bb8)
+
+### Signup Page
+
+![Signup](https://github.com/alirazacodes/CareLink/assets/109011272/f9abb141-3595-4d54-8e1b-740e91e5bf69)
 
 ### Login Page
 
-![Login Page](https://carelink-alpha.vercel.app/screenshots/login.png)
+![Login Page](https://github.com/alirazacodes/CareLink/assets/109011272/319a70a1-5bb0-4080-9a23-722a4da8d20b)
 
 ### Add Voice Page
 
-![Add Voice Page](https://carelink-alpha.vercel.app/screenshots/add-voice.png)
+![Add Voice Page](https://github.com/alirazacodes/CareLink/assets/109011272/bb9673e7-fa27-4371-8ef5-10838f2fb273)
+
+### Record Voice Page
+
+![Record Voice](https://github.com/alirazacodes/CareLink/assets/109011272/94dd315d-a280-4437-a30c-fe61e56d444e)
 
 ### Text to Speech Page
 
-![Text to Speech Page](https://carelink-alpha.vercel.app/screenshots/text-to-speech.png)
+![Text to Speech Page](https://github.com/alirazacodes/CareLink/assets/109011272/fb78f1c8-1374-48ec-affd-073d9325880e)
+
 
 For a live demo, visit the [CareLink website](https://carelink-alpha.vercel.app/).
