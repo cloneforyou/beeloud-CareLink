@@ -47,7 +47,7 @@ export default function AudioPlay({ file }) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
       >
-        '{file.text}'
+        '{file?.text}'
       </MotionText>
       <ReactAudioPlayer src={AudioFile} controls />
     </MotionBox>
