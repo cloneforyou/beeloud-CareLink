@@ -45,7 +45,16 @@ const AuthPage = () => {
         });
         return;
       }
-
+      if (!isValidEmail(email)) {
+        toast({
+          title: "Error",
+          description: "Invalid Email!",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       if (users.find((user) => user.email === email)) {
         toast({
           title: "Error",
@@ -98,6 +107,16 @@ const AuthPage = () => {
 
   const handleLogin = async () => {
     if (email && password) {
+      if (!isValidEmail(email)) {
+        toast({
+          title: "Error",
+          description: "Invalid Email!",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+        return;
+      }
       if (
         users.find((user) => user.email === email && user.password === password)
       ) {
@@ -122,6 +141,11 @@ const AuthPage = () => {
       });
     }
   };
+
+  function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
 
   async function fetchUsers() {
     try {
