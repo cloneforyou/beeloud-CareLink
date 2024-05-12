@@ -22,6 +22,8 @@ import {
   GridItem,
   useToast,
 } from "@chakra-ui/react";
+import { useVoiceVisualizer, VoiceVisualizer } from "react-voice-visualizer";
+
 import { motion } from "framer-motion";
 import {
   FaPlus,
@@ -30,6 +32,7 @@ import {
   FaTrash,
   FaBolt,
   FaUpload,
+  FaFile,
 } from "react-icons/fa";
 import Sidebar from "../components/sidebar";
 import { useRouter } from "next/router";
@@ -71,24 +74,15 @@ const AddVoicePage = () => {
       });
       return;
     }
+    setFiles([])
+    clearCanvas()
+    setIsRecording(false)
+    setName("")
+    setDescription("")
     setIsModalOpen(true);
   };
   const closeModal = () => setIsModalOpen(false);
-  let chunks = [];
   const startRecording = async () => {
-    // setAudioChunks([])
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const recorder = new MediaRecorder(stream);
-    recorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        setAudioChunks((prev) => [...prev, event.data]);
-        // chunks.push(event.data);
-      }
-    };
-    recorder.start();
-    console.log(recorder);
-
-    setMediaRecorder(recorder);
     setIsRecording(true);
   };
 
@@ -96,22 +90,21 @@ const AddVoicePage = () => {
   const [cloning, setCloning] = useState(false);
 
   const stopRecording = () => {
-    console.log(mediaRecorder);
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-      mediaRecorder.stop();
-    }
-    console.log(mediaRecorder);
     setIsRecording(false);
-
-    const blob = new Blob(audioChunks, { type: "audio/webm" });
-    const audioURL = URL.createObjectURL(blob);
-    const audioElement = new Audio(audioURL);
-
-    console.log(audioChunks);
-    setAudioFile(URL.createObjectURL(blob));
   };
 
   const handleAddVoice = async () => {
+    if (voices.length >= 2) {
+      console.log("You can upload only two voices.");
+      toast({
+        title: "Error",
+        description: "As Alpha user, You can only clone / upload two voices!",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     if (files.length > 0) {
       try {
         const form = new FormData();
@@ -170,7 +163,9 @@ const AddVoicePage = () => {
           duration: 3000,
           isClosable: true,
         });
-        router.reload();
+        clearCanvas();
+        await fetchUsers();
+
         closeModal();
       } catch (error) {
         toast({
@@ -184,6 +179,7 @@ const AddVoicePage = () => {
       } finally {
         setCloning(false);
         setFiles([]);
+        // router.reload();
       }
     }
   };
@@ -237,37 +233,6 @@ const AddVoicePage = () => {
     }
   };
 
-  const convertBlobToMP3 = () => {
-    if (!audioChunks) {
-      console.warn("No blob available");
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64String = btoa(
-        new Uint8Array(reader.result).reduce(
-          (data, byte) => data + String.fromCharCode(byte),
-          ""
-        )
-      );
-
-      const dataUrl = `data:audio/mp3;base64,${base64String}`;
-
-      // Create a link with the data URL
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = "audio.mp3";
-
-      // Trigger a click event on the link to prompt download
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    };
-
-    reader.readAsArrayBuffer(audioChunks[0]);
-  };
-
   const [files, setFiles] = useState([]);
   const handleFileUpload = (event) => {
     console.log("files");
@@ -306,6 +271,29 @@ const AddVoicePage = () => {
     fetchUsers();
   }, []);
 
+  const recorderControls = useVoiceVisualizer();
+  const { recordedBlob, error, audioRef, clearCanvas } = recorderControls;
+
+  // Get the recorded audio blob
+  useEffect(() => {
+    if (!recordedBlob) return;
+
+    const fileName = "recorded_audio.mp3";
+    const file = new File([recordedBlob], fileName, {
+      type: recordedBlob.type,
+    });
+    setFiles([file]);
+    // console.log(recordedBlob);
+    // console.log([file]);
+  }, [recordedBlob, error]);
+
+  // Get the error when it occurs
+  useEffect(() => {
+    if (!error) return;
+
+    console.error(error);
+  }, [error]);
+
   return (
     <Box bgGradient={bgGradient} minH="100vh">
       <Sidebar userEmail={email} />
@@ -317,6 +305,7 @@ const AddVoicePage = () => {
         justify="center"
         minH="100vh"
         p={4}
+        pl={20}
         pt={{ base: "80px", lg: "0" }}
       >
         <Box textAlign="center" mb={6}>
@@ -329,32 +318,32 @@ const AddVoicePage = () => {
           </Text>
         </Box>
 
-        {typeof window !== "undefined" && (
-          <MotionBox
-            as="button"
-            w="300px"
-            h="150px"
-            bg="white"
-            borderRadius="md"
-            boxShadow="md"
-            display="flex"
-            flexDirection="column"
-            alignItems="center"
-            justifyContent="center"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            onClick={openModal}
-            mb={4}
-          >
-            <FaPlus size="40px" color="gray.500" />
-            <Text mt={2} fontSize="md">
-              Add Generative or Cloned Voice
-            </Text>
-            <Text mt={2} fontSize="md">
-              {voices?.length} / 2
-            </Text>
-          </MotionBox>
-        )}
+        {/* {typeof window !== "undefined" && ( */}
+        <MotionBox
+          as="button"
+          w="300px"
+          h="150px"
+          bg="white"
+          borderRadius="md"
+          boxShadow="md"
+          display="flex"
+          flexDirection="column"
+          alignItems="center"
+          justifyContent="center"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={openModal}
+          mb={4}
+        >
+          <FaPlus size="40px" color="gray.500" />
+          <Text mt={2} fontSize="md">
+            Add Generative or Cloned Voice
+          </Text>
+          <Text mt={2} fontSize="md">
+            {voices?.length} / 2
+          </Text>
+        </MotionBox>
+        {/* )} */}
 
         {/* Voice Cards */}
         <Grid
@@ -417,59 +406,76 @@ const AddVoicePage = () => {
               />
               <Box
                 w="full"
-                h="200px"
+                h="300px"
                 border="2px dashed gray"
                 borderRadius="md"
                 display="flex"
                 alignItems="center"
                 justifyContent="center"
-                cursor="pointer"
+                // cursor="pointer"
                 // onClick={triggerFileInput}
               >
                 <VStack>
-                  <Box gap="10px" display="flex">
-                    <IconButton
-                      icon={<FaUpload />}
-                      aria-label="Upload"
-                      variant="outline"
-                      size="lg"
-                      onClick={triggerFileInput}
-                    />
-                    {files.length > 0 && (
-                      <IconButton
-                        icon={<MdDelete />}
-                        aria-label="Upload"
-                        variant="outline"
-                        size="lg"
-                        onClick={handleRemoveFiles}
-                      />
-                    )}
-                  </Box>
-                  {files.length > 0 ? (
-                    <Text>
-                      File selected: <b>{files[0]?.name}</b>
-                    </Text>
-                  ) : (
+                  {!isRecording && (
                     <>
-                      <Text>Click to upload a file or drag and drop</Text>
-                      <Text>Audio files, up to 10MB each</Text>
+                      <Box gap="10px" display="flex">
+                        <IconButton
+                          icon={<FaUpload />}
+                          aria-label="Upload"
+                          variant="outline"
+                          size="lg"
+                          onClick={triggerFileInput}
+                        />
+                        {files.length > 0 && (
+                          <IconButton
+                            icon={<MdDelete />}
+                            aria-label="Upload"
+                            variant="outline"
+                            size="lg"
+                            onClick={handleRemoveFiles}
+                          />
+                        )}
+                      </Box>
+
+                      {files.length > 0 ? (
+                        <Text>
+                          File selected: <b>{files[0]?.name}</b>
+                        </Text>
+                      ) : (
+                        <>
+                          <Text>Click to upload a file or drag and drop</Text>
+                          <Text>Audio files, up to 10MB each</Text>
+                        </>
+                      )}
+                      <Text>OR</Text>
                     </>
                   )}
-                  <Text>OR</Text>
                   <Button
-                    leftIcon={<FaMicrophone />}
+                    leftIcon={isRecording ? <FaFile /> : <FaMicrophone />}
                     onClick={isRecording ? stopRecording : startRecording}
                   >
-                    {isRecording ? "Stop Recording" : "Record Audio"}
+                    {isRecording ? "Clone File" : "Record Audio"}
                   </Button>
+                  {isRecording && (
+                    <VoiceVisualizer
+                      ref={audioRef}
+                      controls={recorderControls}
+                      height={"100px"}
+                      width={"300px"}
+                      mainBarColor="teal"
+                      secondaryBarColor="black"
+                      isDownloadAudioButtonShown
+                      // isControlPanelShown
+                    />
+                  )}
 
-                  {AudioFile && (
+                  {/* {AudioFile && (
                     <ReactAudioPlayer
                       src={AudioFile}
                       autoPlay={true}
                       controls
                     />
-                  )}
+                  )} */}
                 </VStack>
                 <Input
                   type="file"
@@ -482,12 +488,12 @@ const AddVoicePage = () => {
                 {/* <button onClick={convertBlobToMP3}>Convert to MP3</button> */}
               </Box>
               <Box>
-                <Text>Samples 0 / 25</Text>
+                {/* <Text>Samples 0 / 25</Text> */}
                 <Box bg="gray.100" p={4} borderRadius="md">
-                  <Text>
+                  {/* <Text>
                     No items uploaded yet. Upload audio samples of the voice you
                     would like to clone.
-                  </Text>
+                  </Text> */}
                   <Text>
                     Sample quality is more important than quantity. Noisy
                     samples may give bad results. Providing more than 5 minutes
