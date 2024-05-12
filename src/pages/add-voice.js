@@ -74,11 +74,11 @@ const AddVoicePage = () => {
       });
       return;
     }
-    setFiles([])
-    clearCanvas()
-    setIsRecording(false)
-    setName("")
-    setDescription("")
+    setFiles([]);
+    clearCanvas();
+    setIsRecording(false);
+    setName("");
+    setDescription("");
     setIsModalOpen(true);
   };
   const closeModal = () => setIsModalOpen(false);
@@ -233,6 +233,18 @@ const AddVoicePage = () => {
     }
   };
 
+  const handleIDVoice = async (voiceID) => {
+    console.log(voiceID);
+if(!voiceID) return
+toast({
+  title: "Voice ID",
+  description: `ID: ${voiceID}`,
+  status: "success",
+  duration: 3000,
+  isClosable: true,
+});
+
+  };
   const [files, setFiles] = useState([]);
   const handleFileUpload = (event) => {
     console.log("files");
@@ -283,8 +295,6 @@ const AddVoicePage = () => {
       type: recordedBlob.type,
     });
     setFiles([file]);
-    // console.log(recordedBlob);
-    // console.log([file]);
   }, [recordedBlob, error]);
 
   // Get the error when it occurs
@@ -369,7 +379,12 @@ const AddVoicePage = () => {
                     </HStack>
                     <Text>{voice.voiceDescription}</Text>
                   </Box>
-                  <Button size="sm">ID</Button>
+                  <Button
+                    size="sm"
+                    onClick={() => handleIDVoice(voice.voice_id)}
+                  >
+                    ID
+                  </Button>
                 </HStack>
                 <HStack mt={4} justify="space-between">
                   {/* <Button size="sm" leftIcon={<FaMicrophone />}>
